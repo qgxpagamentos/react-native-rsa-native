@@ -267,5 +267,45 @@ class RNRSAKeychain: NSObject {
         resolve(msg)
     }
     
+    @objc
+    func decrypt(_ message: String ,keyTag: String, transformation: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+        let rsa_ec = RSAECNative(keyTag: keyTag)
+        if !transformation.isEmpty {
+            rsa_ec.setTransformation(value: transformation)
+        }
+        let msg = rsa_ec.decrypt(message: message)
+        resolve(msg)
+    }
+    
+    @objc
+    func encrypt(_ message: String ,keyTag: String, transformation: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+        let rsa_ec = RSAECNative(keyTag: keyTag)
+        if !transformation.isEmpty {
+            rsa_ec.setTransformation(value: transformation)
+        }
+        let msg = rsa_ec.encrypt(message: message)
+        resolve(msg)
+    }
+    
+    @objc
+    func decrypt64(_ message: String ,keyTag: String, transformation: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+        let rsa_ec = RSAECNative(keyTag: keyTag)
+        if !transformation.isEmpty {
+            rsa_ec.setTransformation(value: transformation)
+        }
+        let msg = rsa_ec.decrypt64(message: message)
+        resolve(msg)
+    }
+    
+    @objc
+    func encrypt64(_ message: String ,keyTag: String, transformation: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+        let rsa_ec = RSAECNative(keyTag: keyTag)
+        if !transformation.isEmpty {
+            rsa_ec.setTransformation(value: transformation)
+        }
+        let msg = rsa_ec.encrypt64(message: message)
+        resolve(msg)
+    }
+
 }
 

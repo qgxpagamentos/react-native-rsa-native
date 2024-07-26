@@ -1,75 +1,68 @@
 package com.RNRSA;
 
 
+import static android.security.keystore.KeyProperties.DIGEST_SHA1;
+import static android.security.keystore.KeyProperties.DIGEST_SHA256;
+import static android.security.keystore.KeyProperties.DIGEST_SHA384;
+import static android.security.keystore.KeyProperties.DIGEST_SHA512;
+import static android.security.keystore.KeyProperties.PURPOSE_DECRYPT;
+import static android.security.keystore.KeyProperties.PURPOSE_ENCRYPT;
+import static android.security.keystore.KeyProperties.PURPOSE_SIGN;
+import static android.security.keystore.KeyProperties.PURPOSE_VERIFY;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.security.KeyPairGeneratorSpec;
-
 import android.util.Base64;
-import android.content.Context;
 
+import org.spongycastle.asn1.ASN1Encodable;
+import org.spongycastle.asn1.ASN1InputStream;
+import org.spongycastle.asn1.ASN1Primitive;
+import org.spongycastle.asn1.pkcs.PrivateKeyInfo;
+import org.spongycastle.asn1.pkcs.RSAPrivateKey;
+import org.spongycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.spongycastle.openssl.PEMParser;
+import org.spongycastle.operator.OperatorCreationException;
+import org.spongycastle.pkcs.PKCS10CertificationRequest;
+import org.spongycastle.util.io.pem.PemObject;
+import org.spongycastle.util.io.pem.PemReader;
+import org.spongycastle.util.io.pem.PemWriter;
 
-import java.security.MessageDigest;
-import java.security.SecureRandom;
-import java.security.spec.ECGenParameterSpec;
-import java.util.Calendar;
-import java.math.BigInteger;
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.NoSuchProviderException;
-import java.security.PublicKey;
-import java.security.PrivateKey;
-import java.security.KeyFactory;
-import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
-import java.security.spec.X509EncodedKeySpec;
-import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Calendar;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.BadPaddingException;
 import javax.security.auth.x500.X500Principal;
-
-import java.io.IOException;
-
-
-
-import org.spongycastle.asn1.ASN1InputStream;
-import org.spongycastle.asn1.ASN1Encodable;
-import org.spongycastle.asn1.ASN1ObjectIdentifier;
-import org.spongycastle.asn1.ASN1Primitive;
-import org.spongycastle.asn1.pkcs.PKCSObjectIdentifiers;
-import org.spongycastle.asn1.pkcs.PrivateKeyInfo;
-import org.spongycastle.asn1.pkcs.RSAPublicKey;
-import org.spongycastle.asn1.pkcs.RSAPrivateKey;
-import org.spongycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.spongycastle.operator.OperatorCreationException;
-import org.spongycastle.pkcs.PKCS10CertificationRequest;
-import org.spongycastle.util.io.pem.PemObject;
-import org.spongycastle.util.io.pem.PemWriter;
-import org.spongycastle.util.io.pem.PemReader;
-import org.spongycastle.asn1.pkcs.RSAPublicKey;
-import org.spongycastle.openssl.PEMParser;
-import org.spongycastle.util.io.pem.PemObject;
-
-
-import static android.security.keystore.KeyProperties.*;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.nio.charset.Charset;
 
 
 public class RSA {
@@ -82,6 +75,8 @@ public class RSA {
     private static final String CSR_HEADER = "CERTIFICATE REQUEST";
 
     private String keyTag;
+
+    private String transformation;
 
     private PublicKey publicKey;
     private PrivateKey privateKey;
@@ -98,11 +93,7 @@ public class RSA {
     }
 
     private void setupCharset() {
-        if (android.os.Build.VERSION.SDK_INT >= 19) {
-            CharsetUTF_8 = UTF_8;
-        } else {
-            CharsetUTF_8 = Charset.forName("UTF-8");
-        }
+        CharsetUTF_8 = UTF_8;
     }
 
     public String getPublicKey() throws IOException {
@@ -116,8 +107,16 @@ public class RSA {
         return dataToPem(PRIVATE_HEADER, pkcs1PrivateKey);
     }
 
+    public String getTransformation() {
+        return this.transformation;
+    }
+
     public void setPublicKey(String publicKey) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         this.publicKey = pkcs1ToPublicKey(publicKey);
+    }
+
+    public  void setTransformation(String transformation) {
+        this.transformation = transformation;
     }
 
     public void setPrivateKey(String privateKey) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
@@ -127,12 +126,14 @@ public class RSA {
 
 
     // This function will be called by encrypt and encrypt64
-    private byte[] encrypt(byte[] data) throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException {
-        String encodedMessage = null;
-        final Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding");
+    private byte[] encrypt(byte[] data) throws NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException {
+        String defaultTransformation = "RSA/NONE/PKCS1Padding";
+        if (this.transformation != null && !this.transformation.isEmpty()) {
+            defaultTransformation = this.transformation;
+        }
+        final Cipher cipher = Cipher.getInstance(defaultTransformation);
         cipher.init(Cipher.ENCRYPT_MODE, this.publicKey);
-        byte[] cipherBytes = cipher.doFinal(data);
-        return cipherBytes;
+        return cipher.doFinal(data);
     }
 
     // Base64 input
@@ -150,11 +151,13 @@ public class RSA {
     }
 
     private byte[] decrypt(byte[] cipherBytes) throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException {
-        String message = null;
-        final Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding");
+        String defaultTransformation = "RSA/NONE/PKCS1Padding";
+        if (this.transformation != null && !this.transformation.isEmpty()) {
+            defaultTransformation = this.transformation;
+        }
+        final Cipher cipher = Cipher.getInstance(defaultTransformation);
         cipher.init(Cipher.DECRYPT_MODE, this.privateKey);
-        byte[] data = cipher.doFinal(cipherBytes);
-        return data;
+        return cipher.doFinal(cipherBytes);
     }
 
     // UTF-8 input
@@ -282,7 +285,7 @@ public class RSA {
         }
     }
 
-    public void deletePrivateKey() throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException, IOException, CertificateException {
+    public void deletePrivateKey() throws KeyStoreException, NoSuchAlgorithmException, IOException, CertificateException {
         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
         keyStore.load(null);
         keyStore.deleteEntry(this.keyTag);
@@ -290,11 +293,11 @@ public class RSA {
         this.publicKey = null;
     }
 
-    public void generate() throws IOException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+    public void generate() throws NoSuchAlgorithmException {
        this.generate(2048);
     }
 
-    public void generate(int keySize) throws IOException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+    public void generate(int keySize) throws  NoSuchAlgorithmException {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance(ALGORITHM);
         kpg.initialize(keySize);
 
@@ -393,7 +396,6 @@ public class RSA {
             e.printStackTrace();
         }
     }
-
 
     public String getCSR() throws IOException {
         byte  CSRder[] = this.csr.getEncoded();

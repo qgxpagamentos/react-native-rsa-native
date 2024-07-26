@@ -110,8 +110,6 @@ public class CsrHelper {
                 new X500Name(principal), publicKey);
 
         ExtensionsGenerator extensionsGenerator = new ExtensionsGenerator();
-//        extensionsGenerator.addExtension(Extension.basicConstraints, true, new BasicConstraints(
-//                true));
         csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest,
                 extensionsGenerator.generate());
         PKCS10CertificationRequest csr = csrBuilder.build(signer);

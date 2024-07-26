@@ -17,19 +17,21 @@ buildscript {
         }
 
         dependencies {
-            classpath("com.android.tools.build:gradle:3.5.3")
+            classpath("com.android.tools.build:gradle:8.4.0")
         }
     }
 }
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 28)
-    buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
+    namespace 'com.RNRSA'
+
+    compileSdkVersion safeExtGet('compileSdkVersion', 35)
+    buildToolsVersion safeExtGet('buildToolsVersion', '35.0.0')
 
     defaultConfig {
-        minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 28)
+        minSdkVersion safeExtGet('minSdkVersion', 26)
+        targetSdkVersion safeExtGet('targetSdkVersion', 35)
         versionCode 1
         versionName "1.0"
         ndk {
@@ -38,6 +40,25 @@ android {
     }
     lintOptions {
        warning 'InvalidPackage'
+    }
+
+    compileOptions {
+        sourceCompatibility 11
+        targetCompatibility 11
+    }
+
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility 11
+                    targetCompatibility 11
+                }
+            }
+        }
     }
 }
 
@@ -55,8 +76,8 @@ allprojects {
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
-    implementation 'com.madgag.spongycastle:core:1.56.0.0'
-    implementation 'com.madgag.spongycastle:prov:1.56.0.0'
-    implementation 'com.madgag.spongycastle:bcpkix-jdk15on:1.56.0.0'
+    implementation 'com.madgag.spongycastle:core:1.58.0.0'
+    implementation 'com.madgag.spongycastle:prov:1.58.0.0'
+    implementation 'com.madgag.spongycastle:bcpkix-jdk15on:1.58.0.0'
 }
   

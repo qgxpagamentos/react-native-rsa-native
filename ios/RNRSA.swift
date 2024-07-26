@@ -52,6 +52,22 @@ class RNRSA: NSObject {
         }
         resolve(false)
     }
+
+    @objc
+    func encrypt(_ message: String ,withKey: String, transformation: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+        let rsa_ec = RSAECNative()
+
+        if !transformation.isEmpty {
+            rsa_ec.setTransformation(value: transformation)
+        }
+
+        guard let _ = rsa_ec.setPublicKey(publicKey: withKey) else {
+            resolve(false)
+            return
+        }
+        let msg = rsa_ec.encrypt(message: message)
+        resolve(msg)
+    }
     
     @objc
     func encrypt(_ message: String ,withKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
@@ -61,6 +77,22 @@ class RNRSA: NSObject {
             return
         }
         let msg = rsa_ec.encrypt(message: message)
+        resolve(msg)
+    }
+    
+    @objc
+    func decrypt(_ message: String ,withKey: String, transformation: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+        let rsa_ec = RSAECNative()
+        
+        if !transformation.isEmpty {
+            rsa_ec.setTransformation(value: transformation)
+        }
+        
+        guard let _ = rsa_ec.setPrivateKey(privateKey: withKey) else {
+            resolve(false)
+            return
+        }
+        let msg = rsa_ec.decrypt(message: message)
         resolve(msg)
     }
     
@@ -75,6 +107,21 @@ class RNRSA: NSObject {
         resolve(msg)
     }
     
+    @objc
+    func encrypt64(_ message: String ,withKey: String, transformation: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+        let rsa_ec = RSAECNative()
+        
+        if !transformation.isEmpty {
+            rsa_ec.setTransformation(value: transformation)
+        }
+
+        guard let _ = rsa_ec.setPublicKey(publicKey: withKey) else {
+            resolve(false)
+            return
+        }
+        let msg = rsa_ec.encrypt64(message: message)
+        resolve(msg)
+    }
     
     @objc
     func encrypt64(_ message: String ,withKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
@@ -84,6 +131,22 @@ class RNRSA: NSObject {
             return
         }
         let msg = rsa_ec.encrypt64(message: message)
+        resolve(msg)
+    }
+    
+    @objc
+    func decrypt64(_ message: String ,withKey: String, transformation: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+        let rsa_ec = RSAECNative()
+
+        if !transformation.isEmpty {
+            rsa_ec.setTransformation(value: transformation)
+        }
+
+        guard let _ = rsa_ec.setPrivateKey(privateKey: withKey) else {
+            resolve(false)
+            return
+        }
+        let msg = rsa_ec.decrypt64(message: message)
         resolve(msg)
     }
     

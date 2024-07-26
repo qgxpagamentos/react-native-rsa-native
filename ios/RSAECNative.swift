@@ -19,6 +19,7 @@ class RSAECNative: NSObject {
     let privateKeyTag: String?
     var publicKeyBits: Data?
     var keyAlgorithm = KeyAlgorithm.rsa(signatureType: .sha512)
+    var transformation = SecKeyAlgorithm.rsaEncryptionPKCS1
     
     public init(keyTag: String?){
         self.publicKeyTag = "\(keyTag ?? "").public"
@@ -196,6 +197,26 @@ class RSAECNative: NSObject {
         }
     }
     
+    public func setTransformation(value: String) {
+        switch value {
+        case "RSA/ECB/PKCS1Padding":
+            self.transformation = SecKeyAlgorithm.rsaEncryptionPKCS1
+        case "RSA/ECB/OAEPWithSHA-1AndMGF1Padding":
+            self.transformation = SecKeyAlgorithm.rsaEncryptionOAEPSHA1
+        case "RSA/ECB/OAEPWithSHA-224AndMGF1Padding":
+            self.transformation = SecKeyAlgorithm.rsaEncryptionOAEPSHA224
+        case "RSA/ECB/OAEPWithSHA-256AndMGF1Padding":
+            self.transformation = SecKeyAlgorithm.rsaEncryptionOAEPSHA256
+        case "RSA/ECB/OAEPWithSHA-384AndMGF1Padding":
+            self.transformation = SecKeyAlgorithm.rsaEncryptionOAEPSHA384
+        case "RSA/ECB/OAEPWithSHA-512AndMGF1Padding":
+            self.transformation = SecKeyAlgorithm.rsaEncryptionOAEPSHA512
+        default:
+            self.transformation = SecKeyAlgorithm.rsaEncryptionPKCS1
+        }
+
+    }
+    
     
     public func deletePrivateKey(){
         var query: [String: AnyObject] = [
@@ -338,10 +359,11 @@ class RSAECNative: NSObject {
         // Closures
         let encryptor:SecKeyPerformBlock = { publicKey in
             if #available(iOS 10.0, *) {
-                let canEncrypt = SecKeyIsAlgorithmSupported(publicKey, .encrypt, .rsaEncryptionPKCS1)
+                var defaultTransformation = self.transformation
+                let canEncrypt = SecKeyIsAlgorithmSupported(publicKey, .encrypt, defaultTransformation)
                 if(canEncrypt){
                     var error: Unmanaged<CFError>?
-                    cipherText = SecKeyCreateEncryptedData(publicKey, .rsaEncryptionPKCS1, data as CFData, &error) as Data?
+                    cipherText = SecKeyCreateEncryptedData(publicKey, defaultTransformation, data as CFData, &error) as Data?
                 }
             } else {
                 // Fallback on earlier versions
@@ -377,10 +399,11 @@ class RSAECNative: NSObject {
         var clearText: Data?
         let decryptor: SecKeyPerformBlock = {privateKey in
             if #available(iOS 10.0, *) {
-                let canEncrypt = SecKeyIsAlgorithmSupported(privateKey, .decrypt, .rsaEncryptionPKCS1)
+                var defaultTransformation = self.transformation
+                let canEncrypt = SecKeyIsAlgorithmSupported(privateKey, .decrypt, defaultTransformation)
                 if(canEncrypt){
                     var error: Unmanaged<CFError>?
-                    clearText = SecKeyCreateDecryptedData(privateKey, .rsaEncryptionPKCS1, data as CFData, &error) as Data?
+                    clearText = SecKeyCreateDecryptedData(privateKey, defaultTransformation, data as CFData, &error) as Data?
                 }
                 
             } else {

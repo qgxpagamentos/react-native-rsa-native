@@ -41,7 +41,6 @@ RCT_EXTERN_METHOD(verify64WithAlgorithm:(NSString *)signature withMessage:(NSStr
 
 RCT_EXTERN_METHOD(deletePrivateKey:(NSString *)keyTag resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 
-
 RCT_EXTERN_METHOD(encrypt:(NSString *)message keyTag:(NSString *)keyTag resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(decrypt:(NSString *)message keyTag:(NSString *)keyTag resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
@@ -49,6 +48,15 @@ RCT_EXTERN_METHOD(decrypt:(NSString *)message keyTag:(NSString *)keyTag resolver
 RCT_EXTERN_METHOD(encrypt64:(NSString *)message keyTag:(NSString *)keyTag resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(decrypt64:(NSString *)message keyTag:(NSString *)keyTag resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+
+
+RCT_EXTERN_METHOD(encrypt:(NSString *)message keyTag:(NSString *)keyTag transformation:(NSString *)transformation resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(decrypt:(NSString *)message keyTag:(NSString *)keyTag transformation:(NSString *)transformation resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(encrypt64:(NSString *)message keyTag:(NSString *)keyTag transformation:(NSString *)transformation resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(decrypt64:(NSString *)message keyTag:(NSString *)keyTag transformation:(NSString *)transformation resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 
 @end
 
